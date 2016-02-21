@@ -1,0 +1,219 @@
+BEAN DEFINITION
+<bean id="..." />
+<bean name="..." />
+What is the difference between id and name?
+*id is a formal XML attribute and is allowed to contain only valid xml symbols(until Spring 3).
+*name is allowed to contain any symbols including whitespaces. It is used to point several names for one bean. It can be used when your bean implements several interfaces: ClientService and LogonService. In different places you can refer to that bean by different names. Doing this way you create aliases for bean. In addition to attribute name you can create aliases by using xml tag alias:
+<bean id="batman" />
+<alias name="batman" alias="dark_knight" />
+Alias can be used when you add some context and you can't change it, but you want to define another name for some bean from that context.
+
+SPRING CONTAINERS
+There are 2 types if containers in Spring:
+1) BeanFactory - it is the simplest container and can do only DI.
+2) ApplicationContext - it has abilities of BeanFactory and adds some services for managing beans in container.
+
+BEAN SCOPE
+By default all beans created by spring are singletons, but we can configure spring so that after each call of getBean() it will create new object. To do that we need to define scope 'prototype':
+<bean id=".." class=".." scope="prototype" />
+To create singleton we can write:
+<bean id=".." class=".." scope="singleton" />
+There are also scopes for web application: request, session, global-session.
+
+INNER BEANS
+Inner beans are beans which you define inside other bean definition. By doing it you hide that bean from other beans. You can define id or name for inner bean but they will be invisible for other outer beans anyway. Example:
+<bean id="event" scope="prototype" class="Event">
+	<constructor-arg>
+		<bean class="java.util.Date" />
+	<constructor-arg/>
+</bean>
+
+INITIALIZE AND DESTROY
+For initialization purposes we can define init method for a bean:
+<bean id="batman" class="com.yra.Batman" init-method="init" />
+Init method can't has arguments, can has any access modifier and can return value.
+For cleaning resources we can define destroy method for a bean:
+<bean id="batman" class="com.yra.Batman" destroy-method="destroy" />
+It is called when spring closes application context.
+
+BEAN DEFINITION INHERITANCE
+<bean id="batman" ... />
+<bean id="dark_knight" parent="batman" />
+A bean definition potentially contains a large amount of configuration information, including container specific information (for example initialization method, static factory method name, and so forth) and constructor arguments and property values. A child bean definition is a bean definition that inherits configuration data from a parent definition.
+
+DEPENDS-ON
+Sometimes creation of one bean depends on initialization side effects of another bean. In such cases we can write like this:
+<bean id="a" class="..." />
+<bean id="b" class="..." depends-on="a" />
+Here bean "b" will be created after bean "a".
+
+LAZY-INIT
+Sometimes we want to create bean only when getBean() is called. For example, if bean initialization is heavy process we want it to happen only when that bean is requested. In such cases we write:
+<bean id=".." class=".." lazy-init="true" />
+If we want spring to make all bean definitions located in a concrete file are lazy we do this:
+<beans default-lazy-init="true">
+	...
+</beans>
+
+IMPORTING SPRING CONFIGURATION
+Sometimes we want to specify configuration of beans responsible for security in one file and for db connection in another file. To do that we create 2 files: security-spring.xml, db-spring.xml. After that in main spring.xml file we import those resources:
+<beans>
+	<import resource="security-spring.xml" />
+	<import resource="db-spring.xml" />
+</beans>
+
+MULTIPLE CONTEXTS
+We can define parent context and child context. Example:
+ApplicationContext parent = new ClassPathXmlApplicationContext("spr1.xml");
+ApplicationContext child = new ClassPathXmlApplicationContext("spr2.xml", parent);
+In this case beans from child context can refer to bean from parent context but not vise versa.
+
+SETTING PROPERTIES
+<bean id="..">
+	<property name="type" value="integer" />
+</bean>
+For setting list we use:
+<list>
+	<value>..</value>
+	<ref bean=".." />
+	<bean class="java.util.Date" />
+</list>
+map:
+<map>
+    <entry key="INFO" value-ref="consoleEventLogger" />
+    <entry key="ERROR" value-ref="combinedEventLogger" />
+</map>
+
+PROPERTIES FILE LOADING
+To load properties file in spring context we can define PropertyPlaceholderConfigurer:
+<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+	<property name="locations">
+		<list>
+			<value>classpath:client.properties</value>
+		</list>
+	</propery>
+</bean>
+To use values from properties file we do the following:
+<bean id="..">
+	<constructor-arg value="${id}"/>
+	<property name="fullName" value="${name}" />
+</bean>
+
+UTIL NAMESPACE
+We can add namespaces to our spring xml and use additional facilities. For example we can include util namespace - http://www.springframework.org/schema/util. It gives us opportunity to create maps, lists, properties and save them as beans:
+<util:map id="loggerMap">
+	<entry key="INFO" value-ref="consoleLogger" />
+	<entry key="ERROR" value-ref="fileLogger" />
+</util:map>
+
+P AND C NAMESPACES
+We can use these namespaces to shorten spring xml configuration. C namespace is target to eliminate using of constructor-arg tag. Instead of it we can write:
+<bean id="bat" class=".." c:id="${id}" c:fullName="${name}" c:logger-ref="someLogger" />
+where id, fullName, logger are names of constructor arguments.
+P namespace eliminate using of property tag in the same way.
+
+BEAN AUTOWIRING
+Spring can inject bean's properties without property and constructor-arg things. It do this with help of autowiring. Example:
+<bean id="bat" class="" autowire="byName" />
+Here we inject all bat's properties by finding beans with names which equal to names of bean's properties. We can also use byType or constructor(when spring looks for beans with type which specified in bean's constructor).
+
+ANNOTATION CONFIG
+To add opportunity of configuring beans with annotations we need to write in spring xml:
+<context:annotation-config />
+and specifying context namespace.
+One of the most important annotations is @Autowired. It injects bean properties. It can be specified like this: @Autowired(required=false) and spring won't throw an exception because of bean absence. @Autowired search bean by type but there are case when we have several bean implementing one interface. In such situation we can specify the name of bean that we want to inject as property:
+@Autowired
+@Qualifier("Nolan's version")
+private Batman batman; 
+@PostConstruct and @PreDestroy are analogues of init-mehtod and destroy-method xml attributes.
+To define beans we can one of the following annotations: @Component, @Controller, @Repository, @Service. There is no difference between them. To make spring aware of beans declared by these annotations we need to write in xml:
+<context:component-scan base-package="..." />
+
+JAVA BASED CONFIGURATION
+We also can configure and create beans in java code. To do that we need to write:
+@Configuration
+class BatmanConfig {
+	@Bean
+	public Batman createBatman() {
+		return new Batman();
+	}
+}
+In such approach properties can be set by @Autowired. To use such configuration class we need use specific ApplicationContext implementation:
+ApplicationContext ctx = new AnnotationConfigApplicationContext(BatmanConfig.class);
+We can pass there several configuration classes. One more way:
+AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
+ctx.register(BatmanConfig.class);
+ctx.refresh();// update context
+If you specified your beans with @Component annotation than you can scan package:
+ctx.scan("come.epam.spring.core");
+ctx.refresh();
+
+EXPRESSION LANGUAGE
+We can use expr language for configuring spring beans. For example, previously we bean property doing the following:
+<property name="weapon" ref="shotgun" />
+We also can do that with expr language:
+<property name="weapon" value="#{shotgun}" />
+Why we need that? We actualy can call methods of beans inside the expr language block. For example:
+<property name="weapon" value="#{jamesBond.walterP99} />"
+We also can pass arguments in these methods: value="#{jamesBond.car('Casino-Royal')}"
+or continue calling sequence: value="#{jameBond.car('Casino-Royal').petrolAmount}"
+in case of car() return null exveption will be thrown. But we can avoid that: "#{jamesBond.car('Casino-Royal')?.petrolAmount}" - now if car() return null the result of expression will null.
+If we want to call some static variable or method we do this:
+<property name="weapon" value="#{T(com.bondiana.Arsenal).GRENADE}" />
+<... value="#{T(com.bond.Bond).idGenerator}" />
+Expression language has support for logical, mathematical operations and also instanceof and regular expression matching. Ternary operator is also allowable.
+
+AOP IN SPRING
+To tell spring that we gonna use aspects we need to specify in our xml config:
+<aop:aspectj-autoproxy />
+or if we use annotations:
+@Configuration
+@EnableAspectJAutoProxy
+To define aspect we need to write class and annotate it with @Aspect:
+@Aspect
+public class LoggingAspect {}
+and add bean definition in xml:
+<bean id="loggingasp" class=".." />
+In case of annotation config we just need to specify @Component above class definition.
+
+AOP IN COMMON
+So the aop programming includes such steps as defining aspect class by annotating it with @Aspect. In this class we specify poincuts which are describing points in program workflow where advices code will be inserted. We also define there advices methods. These are methods with annotations @After, @Before, @AfterReturning, @AfterThrowing, @Around with pointcuts specified as annotation value. We can pass JoinPoint object to such methods which are playing role of reference to adviced method.
+
+AOP HANDLING METHOD ARGUMENTS
+To pass some of the method argument to advice method we need to args() in the pointcut description:
+@Pointcut("execution(** com.bat.Batman.fightWith(String) && args(name))")
+public void fightWith(String name) {}
+@Before("fightWith(name)")
+public void fightAdvice(String name) {...} // here advice can read name value
+
+AOP INTRODUCING NEW METHODS
+Sometimes there is a need to make some class to implement some interface. Bu we don't want to declare one more interface because we will have to introduce this method in all implementations. For such case we can use aop proxy that wrap our bean to delegate new method call to object which implements new interface:
+interface Encore {
+	performEncore();
+}...
+@Aspect
+class EncoreIntroducer {
+	@DeclareParents(value="com.concert.Performane+", defaultImpl = DefaultEncoreImpl.class)
+	public Encore encore;
+}
+Here value parameter says to add new method for all implementation of Performance interface and defaultImpl refer to bean to which we will delegate calls.
+
+AOP XML CONFIGURATION
+Configuration of aspects in spring begins with <aop:config> element and usually located within it. Definition of aspect goes into <aop:aspect> element:
+<aop:aspect ref="audience">
+	<aop:before pointcut="execution(** com.yra.Performance.perform(..))"
+		method="takeSeats" />	
+</aop:aspect>
+To define pointcut in a separete element for the sake of reuse we do:
+<aop:pointcut id="performance" expression="execution(** Class.method(..))" />
+It can be defined inside of aspect and used only within it or it can be externalized and used by several aspects.
+
+AOP XML INTRODUCTION
+When we need to extend some bean and make it to implement additional interface without specifying it in java code we use <aop:declare-parents/>
+We specify this element inside of <aop:aspect>:
+<aop:aspect ref="batman">
+  <aop:declare-parents
+	types-matching="com.yra.Batman+"
+	implement-interface="com.yra.Pilot"
+	default-impl="com.pilot.DefaultPilotImpl" />
+</aop:aspect>
