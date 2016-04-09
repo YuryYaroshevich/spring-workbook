@@ -311,7 +311,7 @@ So the aop programming includes such steps as defining aspect class by annotatin
 
 AOP HANDLING METHOD ARGUMENTS
 To pass some of the method argument to advice method we need to args() in the pointcut description:
-@Pointcut("execution(** com.bat.Batman.fightWith(String)) && args(name)")
+@Pointcut("execution(** com.bat.Batman.fightWith(String) && args(name)")
 public void fightWith(String name) {}
 @Before("fightWith(name)")
 public void fightAdvice(String name) {...} // here advice can read name value
