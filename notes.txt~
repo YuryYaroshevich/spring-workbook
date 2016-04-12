@@ -311,7 +311,7 @@ So the aop programming includes such steps as defining aspect class by annotatin
 
 AOP HANDLING METHOD ARGUMENTS
 To pass some of the method argument to advice method we need to args() in the pointcut description:
-@Pointcut("execution(** com.bat.Batman.fightWith(String) && args(name)")
+@Pointcut("execution(** com.bat.Batman.fightWith(String)) && args(name)")
 public void fightWith(String name) {}
 @Before("fightWith(name)")
 public void fightAdvice(String name) {...} // here advice can read name value
@@ -347,3 +347,46 @@ We specify this element inside of <aop:aspect>:
 	implement-interface="com.yra.Pilot"
 	default-impl="com.pilot.DefaultPilotImpl" />
 </aop:aspect>
+
+SPRING MVC
+REQUEST WORKFLOW
+Request come to dispatcher servlet. DispatcherServlet consults with Handler Mapping to choose appropriate controller. After that request goes to controller and got processed by it. After processing controller returns data and view name to DispatcherServlet. DispatcherServlet goes to view resolver with view name and choose wich view will be used for showing data.
+
+APP CONTEXT FOR DISPATCHER SERVLET
+By default spring tries to load app context from file with name consisting of name of dispatcher servlet and suffix '-servlet.xml'. For example:
+<servlet>
+	<servlet-name>dispatcher</servlet-name>
+	<servlet-class>...DispatcherServlet</servlet-class>
+</servlet>
+<servlet-mapping>...</servlet-mapping>
+Here spring will load context from file 'dispatcher-servlet.xml'. If you want to change the name of file, you can specify it in this way:
+<servlet>
+	...
+	<init-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>/WEB-INF/web-config.xml</param-value>
+	</init-param>
+</servlet>
+In this way you define context for dispatcher servlet. But you can define one more app context which will be common for all dispatcher servlets. There you can store definitions of common services, data sources, etc. Do it like this:
+<listener>
+	<listener-class>...ContextLoaderListener</listener-class>
+</listener>
+<context-param>
+	<param-name>contextConfigLocation</param-name>
+	<param-value>/WEB-INF/app-context.xml</param-value>
+</context-param>
+ContextLoaderListener will load this context.
+
+REQUESTS MAPPING
+There are several ways to map requests to specific controller. In the root of hierarchy is HandlerMapping interface that is implemented by:
+* BeanNameUrlHandlerMapping - it maps url to bean name. To use it you define bean with class BeanNameUrlHandlerMapping and then define beans with name equal to request's url. Example: <bean name="/app" class="com.epam.BatmanController" />
+* ControllerClassNameHandlerMapping - it maps url to controller name by removing 'Controller' suffix, converting the remaining string to lower case and addding '/' at the beginning.
+* SimpleUrlHandlerMapping - maps url to controller classes.
+* DefaultAnnotationHandlerMapping - it is a default implementation and its is based on @Controller and @RequestMapping annotations.
+
+XML CONFIG FOR CONTROLLER
+<mvc:annotation-driven /> - this element turn @Controller annotated classes into actual web controllers.
+
+HANDLER INTERCEPTORS
+HandlerInterceptor is an interface that allows to intercept requests before they go to handler(controller) and responses returned by handlers. Usualy we put there fine-grained preprocessing tasks or logic common for several handlers.
+<mvc:annotation-driven /> - 
