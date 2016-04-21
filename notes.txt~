@@ -350,7 +350,7 @@ We specify this element inside of <aop:aspect>:
 
 SPRING MVC
 REQUEST WORKFLOW
-Request come to dispatcher servlet. DispatcherServlet consults with Handler Mapping to choose appropriate controller. After that request goes to controller and got processed by it. After processing controller returns data and view name to DispatcherServlet. DispatcherServlet goes to view resolver with view name and choose wich view will be used for showing data.
+Request come to dispatcher servlet. DispatcherServlet consults with Handler Mapping to choose appropriate controller. After that request goes to controller and processed by it. After processing controller returns data and view name to DispatcherServlet. DispatcherServlet goes to view resolver with view name and choose wich view will be used for showing data.
 
 APP CONTEXT FOR DISPATCHER SERVLET
 By default spring tries to load app context from file with name consisting of name of dispatcher servlet and suffix '-servlet.xml'. For example:
@@ -382,14 +382,11 @@ There are several ways to map requests to specific controller. In the root of hi
 * BeanNameUrlHandlerMapping - it maps url to bean name. To use it you define bean with class BeanNameUrlHandlerMapping and then define beans with name equal to request's url. Example: <bean name="/app" class="com.epam.BatmanController" />
 * ControllerClassNameHandlerMapping - it maps url to controller name by removing 'Controller' suffix, converting the remaining string to lower case and addding '/' at the beginning.
 * SimpleUrlHandlerMapping - maps url to controller classes.
-* DefaultAnnotationHandlerMapping - it is a default implementation and its is based on @Controller and @RequestMapping annotations.
-
-XML CONFIG FOR CONTROLLER
+* DefaultAnnotationHandlerMapping - it is a default implementation based on @Controller and @RequestMapping annotations.
 <mvc:annotation-driven /> - this element turn @Controller annotated classes into actual web controllers.
 
 HANDLER INTERCEPTORS
 HandlerInterceptor is an interface that allows to intercept requests before they go to handler(controller) and responses returned by handlers. Usualy we put there fine-grained preprocessing tasks or logic common for several handlers. We can define them in <mvc:interceptor> xml element.
-<mvc:annotation-driven /> - use this xml element to configure controllers with help of annotations.
 
 CONTROLLER CONCEPT
 In the most simple case controller is an implementation of Controller interface with single handleRequest method which accepts request and response as a parameters and returns ModelAndView object to dispatcher servlet. In case of annotation config use @Controller and @RequestMapping annotations.
@@ -405,11 +402,19 @@ In both cases we can omit annotation values if values in url placeholder match t
 We can also use such annotations as @RequestHeader, @CookieValue, @MatrixVariable to get corresponding values. Annoatation @ModelAttribute used near method parameter binds value of model to method parameter and if used at the method level then bind method return value to resulting model.
 
 VIEW RESOLVING FLOW
-In of the possible cases controller returns name of view. Dispatcher Servlet takes this name and calles every view resolver it has to find corresponding View object. Different implementations of view resolver define different ways to show data.
+In one of the possible cases controller returns name of view. Dispatcher Servlet takes this name and calls every view resolver it has to find corresponding View object. Different implementations of view resolver define different ways to show data.
 Here are some examples of view resolvers:
 1) UrlBasedViewResolver - can be used with JSP view technology.
 2) ResourceBundleViewResolver - can be used to combine different view technologies.
+This works fine until the client ask specific form of data representation. When it happens view name returned by controller is not enough for typical view resolver. In such cases we use ContentNegotiatingViewResolver.
 
 EXCEPTION HANDLING
+Object that implements interface HandlerExceptionResolver is responsible for exception handling. There are multiple approaches of using this interface:
+1) Spring suggest it's own implementation - SimpleMappingExceptionResolver.
+2) You can create your own by implementing this interface.
+3) Exceptions can be handled by controller methods marked by @ExceptionHandler.
+In all these cases returing type of resolveException method or method annotated by @ExceptionHandler is in range of all possible types returned by request handler.
 
+MULTIPART REQUEST
+For handling multipart requests we need to specify implementation of MultipartResolver interface in our context. It will check if request is multipart and if so will process it before handing to controller. In request handler this file will come as MultipartFile object. You can also access parts of multipart request as method parameters by using @RequestPart annotation.
 
