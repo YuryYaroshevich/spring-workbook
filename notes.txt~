@@ -406,7 +406,7 @@ In one of the possible cases controller returns name of view. Dispatcher Servlet
 Here are some examples of view resolvers:
 1) UrlBasedViewResolver - can be used with JSP view technology.
 2) ResourceBundleViewResolver - can be used to combine different view technologies.
-This works fine until the client ask specific form of data representation. When it happens view name returned by controller is not enough for typical view resolver. In such cases we use ContentNegotiatingViewResolver.
+This works fine until the client ask specific form of data representation. When it happens view name returned by controller is not enough for typical view resolver. In such cases we use ContentNegotiatingViewResolver. This resolver strives to understand what content type user wants to see by looking at url end: *.json, *.xml, *.html - and if it doesn't help resolver looks at Accept header value. Then it takes view name and askes other view resolvers to resolve this view. Then it iterates through the list of views trying to find the one with matching content type.  
 
 EXCEPTION HANDLING
 Object that implements interface HandlerExceptionResolver is responsible for exception handling. There are multiple approaches of using this interface:
@@ -418,3 +418,7 @@ In all these cases returing type of resolveException method or method annotated 
 MULTIPART REQUEST
 For handling multipart requests we need to specify implementation of MultipartResolver interface in our context. It will check if request is multipart and if so will process it before handing to controller. In request handler this file will come as MultipartFile object. You can also access parts of multipart request as method parameters by using @RequestPart annotation.
 
+MESSAGE CONVERSION - ALTERNATIVE TO VIEWS
+One of the ways to create REST endpoint is to skip view resolving procedure and use message converion. To do that we need to specify @ResponseBody above the method. This will make Spring to write object returned by method to response body. Message converters help with that. They will transfrom java object into form that is expected by the client.
+At the same time we can use @RequestBody to translate request data into java objects.
+If all methods of controller use message conversion then we can just specify @RestController instead of @Controller. By doing that we inform Spring that all method use message conversion by default.
