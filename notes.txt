@@ -3,13 +3,13 @@ BEAN DEFINITION
 <bean name="..." />
 What is the difference between id and name?
 *id is a formal XML attribute and is allowed to contain only valid xml symbols(until Spring 3).
-*name is allowed to contain any symbols including whitespaces. It is used to point several names for one bean. It can be used when your bean implements several interfaces: ClientService and LogonService. In different places you can refer to that bean by different names. Doing this way you create aliases for bean. In addition to attribute name you can create aliases by using xml tag alias:
+*name is allowed to contain any symbols including whitespaces. It is used to point several names for one bean. It can be used when your bean implements several interfaces: ClientService and LogonService. In different places you can refer to that bean by different names. Doing this way you create aliases for bean. In addition to attribute 'name' you can create aliases by using xml tag alias:
 <bean id="batman" />
 <alias name="batman" alias="dark_knight" />
 Alias can be used when you add some context and you can't change it, but you want to define another name for some bean from that context.
 
 SPRING CONTAINERS
-There are 2 types if containers in Spring:
+There are 2 types of containers in Spring:
 1) BeanFactory - it is the simplest container and can do only DI.
 BeanFactory
 This interface is implemented by objects that hold a number of bean definitions, each uniquely identified by a String name. The BeanFactory is a central registry of application components, and centralizes configuration of application components (no more do individual objects need to read properties files, for example). It is generally better to rely on Dependency Injection ("push" configuration) to configure application objects through setters or constructors, rather than use any form of "pull" configuration like a BeanFactory lookup.
@@ -45,7 +45,7 @@ To define scope you can use @Scope annotation in conjunction with @Component or 
 public Notepad notepad() { ...
 In xml config we can use "scope" attribute:
 <bean id=".." class=".." scope="prototype" />
-In addition to scope and prototype there are also session and request scopes. They are used in web development. For example, we have singleton bean called StoreService and we want to inject session scoped ShoppingCart bean. So to make StoreService work with every ShoppingCart we define it like this:
+In addition to singleton and prototype there are also session and request scopes. They are used in web development. For example, we have singleton bean called StoreService and we want to inject session scoped ShoppingCart bean. So to make StoreService work with every ShoppingCart we define it like this:
 @Component
 @Scope(
 value=WebApplicationContext.SCOPE_SESSION,
@@ -59,7 +59,7 @@ public class StoreService {
 		this.shoppingCart = shoppingCart;
 	}
 }	
-By doing this we inject proxy into StoreService and when it will do smth with shoppingCart field proxy will delegate calls to every session bean of type ShoppingCart. We use ScopedProxyMode.INTERFACES when ShoppingCart is interface and ScopedProxyMode.TARGET_CLASS when it is a class.
+By doing this we inject proxy into StoreService and when it will do smth with shoppingCart field, proxy will delegate calls to every session bean of type ShoppingCart. We use ScopedProxyMode.INTERFACES when ShoppingCart is interface and ScopedProxyMode.TARGET_CLASS when it is a class.
 In case of xml config we do the following:
 <bean id="cart" class="com.myapp.ShoppingCart" scope="session">
 	<aop:scoped-proxy />
@@ -167,7 +167,7 @@ Here we inject all bat's properties by finding beans with names which equal to n
 ANNOTATION CONFIG
 To add opportunity of configuring beans with annotations we need to write in spring xml:
 <context:annotation-config />
-and specifying context namespace.
+and specify context namespace.
 One of the most important annotations is @Autowired. It injects bean properties. It can be specified like this: @Autowired(required=false) and spring won't throw an exception because of bean absence. @Autowired search bean by type but there are case when we have several bean implementing one interface. In such situation we can specify the name of bean that we want to inject as property:
 @Autowired
 @Qualifier("Nolan's version")
@@ -262,7 +262,7 @@ public @interface Fruity { }
 private Dessert dessert;
 
 EXPRESSION LANGUAGE
-We can use expr language for configuring spring beans. For example, previously we bean property doing the following:
+We can use expr language for configuring spring beans. For example, previously we set bean properties doing the following:
 <property name="weapon" ref="shotgun" />
 We also can do that with expr language:
 <property name="weapon" value="#{shotgun}" />
