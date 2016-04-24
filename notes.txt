@@ -412,8 +412,12 @@ EXCEPTION HANDLING
 Object that implements interface HandlerExceptionResolver is responsible for exception handling. There are multiple approaches of using this interface:
 1) Spring suggest it's own implementation - SimpleMappingExceptionResolver.
 2) You can create your own by implementing this interface.
-3) Exceptions can be handled by controller methods marked by @ExceptionHandler.
+3) Exceptions can be handled by controller methods marked by @ExceptionHandler. Such method will handle exception specified in annotation and throwed by any method from controller where this method is defined. If you wanna use this method to handle this exception in all controllers you need to use controller advise technique.
 In all these cases returing type of resolveException method or method annotated by @ExceptionHandler is in range of all possible types returned by request handler.
+We also can annotate our custom exceptions by @ResponseStatus. Doing in this way we map exception to corresponding status code and error message:
+@ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Employee not found")
+public class EmployeeNotFoundException extends RuntimeException {}
+So, when controller throws this exception, client will get corresponding status code and message.
 
 MULTIPART REQUEST
 For handling multipart requests we need to specify implementation of MultipartResolver interface in our context. It will check if request is multipart and if so will process it before handing to controller. In request handler this file will come as MultipartFile object. You can also access parts of multipart request as method parameters by using @RequestPart annotation.

@@ -3,13 +3,13 @@ BEAN DEFINITION
 <bean name="..." />
 What is the difference between id and name?
 *id is a formal XML attribute and is allowed to contain only valid xml symbols(until Spring 3).
-*name is allowed to contain any symbols including whitespaces. It is used to point several names for one bean. It can be used when your bean implements several interfaces: ClientService and LogonService. In different places you can refer to that bean by different names. Doing this way you create aliases for bean. In addition to attribute name you can create aliases by using xml tag alias:
+*name is allowed to contain any symbols including whitespaces. It is used to point several names for one bean. It can be used when your bean implements several interfaces: ClientService and LogonService. In different places you can refer to that bean by different names. Doing this way you create aliases for bean. In addition to attribute 'name' you can create aliases by using xml tag alias:
 <bean id="batman" />
 <alias name="batman" alias="dark_knight" />
 Alias can be used when you add some context and you can't change it, but you want to define another name for some bean from that context.
 
 SPRING CONTAINERS
-There are 2 types if containers in Spring:
+There are 2 types of containers in Spring:
 1) BeanFactory - it is the simplest container and can do only DI.
 BeanFactory
 This interface is implemented by objects that hold a number of bean definitions, each uniquely identified by a String name. The BeanFactory is a central registry of application components, and centralizes configuration of application components (no more do individual objects need to read properties files, for example). It is generally better to rely on Dependency Injection ("push" configuration) to configure application objects through setters or constructors, rather than use any form of "pull" configuration like a BeanFactory lookup.
@@ -45,7 +45,7 @@ To define scope you can use @Scope annotation in conjunction with @Component or 
 public Notepad notepad() { ...
 In xml config we can use "scope" attribute:
 <bean id=".." class=".." scope="prototype" />
-In addition to scope and prototype there are also session and request scopes. They are used in web development. For example, we have singleton bean called StoreService and we want to inject session scoped ShoppingCart bean. So to make StoreService work with every ShoppingCart we define it like this:
+In addition to singleton and prototype there are also session and request scopes. They are used in web development. For example, we have singleton bean called StoreService and we want to inject session scoped ShoppingCart bean. So to make StoreService work with every ShoppingCart we define it like this:
 @Component
 @Scope(
 value=WebApplicationContext.SCOPE_SESSION,
@@ -59,7 +59,7 @@ public class StoreService {
 		this.shoppingCart = shoppingCart;
 	}
 }	
-By doing this we inject proxy into StoreService and when it will do smth with shoppingCart field proxy will delegate calls to every session bean of type ShoppingCart. We use ScopedProxyMode.INTERFACES when ShoppingCart is interface and ScopedProxyMode.TARGET_CLASS when it is a class.
+By doing this we inject proxy into StoreService and when it will do smth with shoppingCart field, proxy will delegate calls to every session bean of type ShoppingCart. We use ScopedProxyMode.INTERFACES when ShoppingCart is interface and ScopedProxyMode.TARGET_CLASS when it is a class.
 In case of xml config we do the following:
 <bean id="cart" class="com.myapp.ShoppingCart" scope="session">
 	<aop:scoped-proxy />
@@ -167,7 +167,7 @@ Here we inject all bat's properties by finding beans with names which equal to n
 ANNOTATION CONFIG
 To add opportunity of configuring beans with annotations we need to write in spring xml:
 <context:annotation-config />
-and specifying context namespace.
+and specify context namespace.
 One of the most important annotations is @Autowired. It injects bean properties. It can be specified like this: @Autowired(required=false) and spring won't throw an exception because of bean absence. @Autowired search bean by type but there are case when we have several bean implementing one interface. In such situation we can specify the name of bean that we want to inject as property:
 @Autowired
 @Qualifier("Nolan's version")
@@ -262,7 +262,7 @@ public @interface Fruity { }
 private Dessert dessert;
 
 EXPRESSION LANGUAGE
-We can use expr language for configuring spring beans. For example, previously we bean property doing the following:
+We can use expr language for configuring spring beans. For example, previously we set bean properties doing the following:
 <property name="weapon" ref="shotgun" />
 We also can do that with expr language:
 <property name="weapon" value="#{shotgun}" />
@@ -412,8 +412,12 @@ EXCEPTION HANDLING
 Object that implements interface HandlerExceptionResolver is responsible for exception handling. There are multiple approaches of using this interface:
 1) Spring suggest it's own implementation - SimpleMappingExceptionResolver.
 2) You can create your own by implementing this interface.
-3) Exceptions can be handled by controller methods marked by @ExceptionHandler.
+3) Exceptions can be handled by controller methods marked by @ExceptionHandler. Such method will handle exception specified in annotation and throwed by any method from controller where this method is defined.
 In all these cases returing type of resolveException method or method annotated by @ExceptionHandler is in range of all possible types returned by request handler.
+We also can annotate our custom exceptions by @ResponseStatus. Doing in this way we map exception to corresponding status code and error message:
+@ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Employee not found")
+public class EmployeeNotFoundException extends RuntimeException {}
+So, when controller throws this exception, client will get corresponding status code and message.
 
 MULTIPART REQUEST
 For handling multipart requests we need to specify implementation of MultipartResolver interface in our context. It will check if request is multipart and if so will process it before handing to controller. In request handler this file will come as MultipartFile object. You can also access parts of multipart request as method parameters by using @RequestPart annotation.
@@ -421,4 +425,5 @@ For handling multipart requests we need to specify implementation of MultipartRe
 MESSAGE CONVERSION - ALTERNATIVE TO VIEWS
 One of the ways to create REST endpoint is to skip view resolving procedure and use message converion. To do that we need to specify @ResponseBody above the method. This will make Spring to write object returned by method to response body. Message converters help with that. They will transfrom java object into form that is expected by the client.
 At the same time we can use @RequestBody to translate request data into java objects.
-If all methods of controller use message conversion then we can just specify @RestController instead of @Controller. By doing that we inform Spring that all method use message conversion by default.
+If all methods of controller use message conversion at response step then we can just specify @RestController instead of @Controller and omit all @ResponseBody annotations. By doing that we inform Spring that all method use message conversion by default.
+If you want to have opportunity to return by controller method not only what goes into response body but also http status codes, set http headers or to put in response body error object you can use ResponseEntity class. There is no need to use @ResponseBody while using ResponseEntity class.
