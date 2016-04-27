@@ -1,1 +1,0 @@
-If you want to have opportunity to return by controller method not only what goes into response body but also http status codes, set http headers or to put in response body error object you can use ResponseEntity class. There is no need to use @ResponseBody while using ResponseEntity class.

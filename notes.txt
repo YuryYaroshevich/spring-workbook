@@ -427,3 +427,9 @@ One of the ways to create REST endpoint is to skip view resolving procedure and 
 At the same time we can use @RequestBody to translate request data into java objects.
 If all methods of controller use message conversion at response step then we can just specify @RestController instead of @Controller and omit all @ResponseBody annotations. By doing that we inform Spring that all method use message conversion by default.
 If you want to have opportunity to return by controller method not only what goes into response body but also http status codes, set http headers or to put in response body error object you can use ResponseEntity class. There is no need to use @ResponseBody while using ResponseEntity class.
+
+CONTROLLER ADVICE
+It could be valuable to put some logic common for several controllers into one class. For example, method annotated with @ExceptionHandler aimed to processing some exception can be used for several controllers which throw that exception. For such goal you can create a class and annotate it with @ControllerAdvice. Methods inside are applied to all @RequestMapping annotated methods. Methods inside such class can be annotated with:
+1) @ExceptionHandler
+2) @InitBinder
+3) @ModelAttribute
