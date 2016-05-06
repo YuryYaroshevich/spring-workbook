@@ -423,13 +423,24 @@ MULTIPART REQUEST
 For handling multipart requests we need to specify implementation of MultipartResolver interface in our context. It will check if request is multipart and if so will process it before handing to controller. There are two implementations out of the box:
 1) CommonsMultipartResolver - use this apache dependency if prefer servlet version below 3.0.
 2) StandartServletMultipartResolver - comes with servlet 3.0.
-In request handler this file will come as MultipartFile object. You can also access parts of multipart request as method parameters by using @RequestPart annotation.
+In request handler this file will come as MultipartFile object. You can also access parts of multipart request as method parameters by using @RequestPart annotation. In case you use Servlet 3.0 spec you can also get file in form of Part object as controller method parameter. In this case there is no need to setup StandardServletMultipartResolver.
 
 MESSAGE CONVERSION - ALTERNATIVE TO VIEWS
 One of the ways to create REST endpoint is to skip view resolving procedure and use message converion. To do that we need to specify @ResponseBody above the method. This will make Spring to write object returned by method to response body. Message converters help with that. They will transfrom java object into form that is expected by the client.
 At the same time we can use @RequestBody to translate request data into java objects.
 If all methods of controller use message conversion at response step then we can just specify @RestController instead of @Controller and omit all @ResponseBody annotations. By doing that we inform Spring that all method use message conversion by default.
 If you want to have opportunity to return by controller method not only what goes into response body but also http status codes, set http headers or to put in response body error object you can use ResponseEntity class. There is no need to use @ResponseBody while using ResponseEntity class.
+
+FLASH ATTRIBUTES
+We can pass values from redirecting method to method which handles redirect by using Flash attrbiutes. 
+@RequestMapping(...)
+public String saveApple(Apple apple, RedirectAttributes model) {
+	appleRepo.save(apple);
+	model.addAttribute("id", apple.getId());
+	model.addFlashAttribute("apple", apple);
+	return "redirect:apple/{id}";
+}
+Such method will redirect to method process, for example, view apple request. And that method will look up apple in a model before going to database. 
 
 CONTROLLER ADVICE
 It could be valuable to put some logic common for several controllers into one class. For example, method annotated with @ExceptionHandler aimed to processing some exception can be used for several controllers which throw that exception. For such goal you can create a class and annotate it with @ControllerAdvice. Methods inside are applied to all @RequestMapping annotated methods. Methods inside such class can be annotated with:
